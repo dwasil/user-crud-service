@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "user-crud-chart.fullname" . }}
+  labels:
+    {{- include "user-crud-chart.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "user-crud-chart.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "user-crud-chart.selectorLabels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/config.yaml") . | sha256sum }}
+    spec:
+ 
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
+          imagePullPolicy: Always
+          ports:
+            - name: web
+              containerPort: 8000
+              protocol: TCP
+          env:
+            - name: DATABASE_URI
+              valueFrom:
+                secretKeyRef:
+                  name: user-crud-secret
+                  key: DATABASE_URI  
+
+      initContainers:
+        - name: check-db-ready
+          image: postgres:latest
+          command: ['sh', '-c', 
+            'until pg_isready -h {{- include "postgresql.fullname" .}} -p 5432; 
+            do echo waiting for database; sleep 2; done;']        

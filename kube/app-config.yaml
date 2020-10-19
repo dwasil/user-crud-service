@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: user-crud-secret
+type: Opaque
+data:
+  DATABASE_URI: cG9zdGdyZXNxbDovL215dXNlcjpwYXNzd2RAcG9zdGdyZXMvbXlhcHAK

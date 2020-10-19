@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-crud-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: user-crud-app
+  template:
+    metadata:
+      labels:
+        app: user-crud-app
+    spec:
+      containers:
+        - name: user-crud-node
+          image: wasil/user-crud-node:0.2.2
+          env:
+            - name: DATABASE_URI
+              valueFrom:
+                secretKeyRef:
+                  name: user-crud-secret
+                  key: DATABASE_URI
+          ports:
+            - name: web
+              containerPort: 8000

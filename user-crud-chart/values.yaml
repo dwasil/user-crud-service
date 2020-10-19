@@ -1,0 +1,26 @@
+replicaCount: 2
+
+image:
+  repository: wasil/user-crud-node
+
+service:
+  type: NodePort
+  port: 8000
+
+postgresql:
+  enabled: true
+  postgresqlUsername: myuser
+  postgresqlPassword: passwd
+  postgresqlDatabase: myapp
+  service:
+    port: "5432"      
+    type: NodePort
+
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+  hosts:
+    - host: bit.homework
+      paths: ["/bitapp/wasil/(.*)"]

@@ -1,0 +1,49 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: user-crud-initdb
+spec:
+  template:
+    metadata:
+      name: user-crud-initdb
+    spec:
+      restartPolicy: Never     
+    
+      containers:
+      - name: post-install-job
+        env:
+        - name: DATABASE_URI
+          valueFrom:
+            secretKeyRef:
+              name: user-crud-secret
+              key: DATABASE_URI   
+        image: postgres:latest
+        command:
+          - sh
+          - "-c"
+          - |
+            psql $DATABASE_URI <<'EOF'
+              create table if not exists "user" (
+                id serial primary key, 
+                username varchar,
+                firstName varchar,
+                lastName varchar,
+                email varchar,
+                phone varchar
+              );
+              
+              insert into "user" 
+                (id, username, firstName, lastName, email, phone ) 
+                  values 
+                (1, 'suser', 'Ivan', 'Ivanoff', 'ivan@example.com', '+89233212343')
+                on conflict (id) do nothing;
+            EOF
+
+      initContainers:
+        - name: check-db-ready
+          image: postgres:latest
+          command: ['sh', '-c', 
+            'until pg_isready -h {{- include "postgresql.fullname" .}} -p 5432; 
+            do echo waiting for database; sleep 2; done;']   
+                        
+  backoffLimit: 2
